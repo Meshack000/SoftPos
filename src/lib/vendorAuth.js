@@ -34,11 +34,11 @@ export function checkPin(pin, salt, hash) {
 }
 
 // Reads the vendor code and PIN from request headers. Returns the vendor or null.
-export function authVendor(request) {
+export async function authVendor(request) {
   const slug = (request.headers.get("x-vendor-slug") || "").trim().toLowerCase();
   const pin = (request.headers.get("x-vendor-pin") || "").trim();
   if (!validSlug(slug)) return null;
-  const vendor = getVendor(slug);
+  const vendor = await getVendor(slug);
   if (!vendor || !checkPin(pin, vendor.pinSalt, vendor.pinHash)) return null;
   return vendor;
 }

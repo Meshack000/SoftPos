@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { createRequest, toPublicRequest } from "@/lib/store";
 import { authVendor } from "@/lib/vendorAuth";
 import { syncRequest } from "@/lib/payments";
+import { safe } from "@/lib/http";
 
 // The vendor asks for an amount.
-export async function POST(request) {
-  const vendor = authVendor(request);
+export const POST = safe(async (request) => {
+  const vendor = await authVendor(request);
   if (!vendor) {
     return NextResponse.json({ error: "Sign in again." }, { status: 401 });
   }
@@ -26,6 +27,6 @@ export async function POST(request) {
     }
   }
 
-  const sale = createRequest(vendor.slug, amount);
+  const sale = await createRequest(vendor.slug, amount);
   return NextResponse.json({ ok: true, request: toPublicRequest(sale) });
-}
+});

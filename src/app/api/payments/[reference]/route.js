@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { toPublic } from "@/lib/store";
 import { refreshPayment, syncRequest } from "@/lib/payments";
+import { safe } from "@/lib/http";
 
 // The buyer's page checks on its payment.
-export async function GET(_request, { params }) {
+export const GET = safe(async (_request, { params }) => {
   const { reference } = await params;
   const payment = await refreshPayment(reference);
 
@@ -15,4 +16,4 @@ export async function GET(_request, { params }) {
   await syncRequest(payment.requestId);
 
   return NextResponse.json({ ok: true, payment: toPublic(payment) });
-}
+});

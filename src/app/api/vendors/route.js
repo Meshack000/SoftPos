@@ -3,9 +3,10 @@ import { saveVendor } from "@/lib/store";
 import { makeSlug, makePin, hashPin } from "@/lib/vendorAuth";
 import { NETWORKS, normalizePhone } from "@/lib/phone";
 import { createSubaccount } from "@/lib/paystack";
+import { safe } from "@/lib/http";
 
 // Creates a vendor and their Paystack payout account. Staff only.
-export async function POST(request) {
+export const POST = safe(async (request) => {
   const expected = process.env.ADMIN_PASSCODE;
   if (!expected) {
     return NextResponse.json(
@@ -45,12 +46,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Choose the vendor's MoMo network." }, { status: 400 });
   }
 
-  let sub;
-  try {
-    sub = await createSubaccount({ businessName: name, phone, network });
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
+  const sub = await createSubaccount({ businessName: name, phone, network });
   if (!sub.ok || !sub.code) {
     return NextResponse.json(
       { error: sub.message || "Paystack could not set up this vendor's payout account." },
@@ -62,7 +58,7 @@ export async function POST(request) {
   const pin = makePin();
   const { salt, hash } = hashPin(pin);
 
-  saveVendor({
+  await saveVendor({
     slug,
     name,
     pinSalt: salt,
@@ -70,8 +66,6 @@ export async function POST(request) {
     payoutPhone: phone,
     payoutNetwork: network,
     subaccountCode: sub.code,
-    currentRequestId: null,
-    createdAt: Date.now(),
   });
 
   // The PIN is returned once, here. We only store a hash of it.
@@ -82,4 +76,4 @@ export async function POST(request) {
     pin,
     payoutName: sub.accountName,
   });
-}
+});

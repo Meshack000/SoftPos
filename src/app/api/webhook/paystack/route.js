@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getPayment, updatePayment, updateRequest } from "@/lib/store";
 import { validSignature } from "@/lib/paystack";
+import { safe } from "@/lib/http";
 
-export async function POST(request) {
+export const POST = safe(async (request) => {
   const rawBody = await request.text();
   const signature = request.headers.get("x-paystack-signature");
 
@@ -19,16 +20,16 @@ export async function POST(request) {
 
   if (event.event === "charge.success") {
     const data = event.data || {};
-    const payment = getPayment(data.reference);
+    const payment = await getPayment(data.reference);
     if (
       payment &&
       payment.status === "pending" &&
       data.amount === Math.round(payment.amount * 100)
     ) {
-      updatePayment(payment.reference, { status: "success", message: "" });
-      updateRequest(payment.requestId, { status: "paid", message: "" });
+      await updatePayment(payment.reference, { status: "success", message: "" });
+      await updateRequest(payment.requestId, { status: "paid", message: "" });
     }
   }
 
   return NextResponse.json({ received: true });
-}
+});
