@@ -10,9 +10,9 @@ export default function Home() {
           href="/terminal"
           className="block rounded-ui bg-brand px-5 py-5 text-white hover:bg-brand-dark"
         >
-          <span className="block text-lg font-bold">Take a payment</span>
+          <span className="block text-lg font-bold">Vendor terminal</span>
           <span className="mt-1 block text-sm text-white/80">
-            Enter an amount and tap the customer&rsquo;s card.
+            Sign in, enter an amount, and get paid.
           </span>
         </Link>
 
@@ -20,9 +20,9 @@ export default function Home() {
           href="/program"
           className="block rounded-ui border border-line px-5 py-5 hover:bg-soft"
         >
-          <span className="block text-lg font-bold">Set up a card</span>
+          <span className="block text-lg font-bold">Set up a vendor card</span>
           <span className="mt-1 block text-sm text-muted">
-            Staff only. Write a link onto a blank NFC tag.
+            Staff only. Create a vendor and write their link onto an NFC tag.
           </span>
         </Link>
       </div>

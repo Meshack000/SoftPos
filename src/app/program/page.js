@@ -9,7 +9,6 @@ const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg"
 
 export default function Program() {
   const [passcode, setPasscode] = useState("");
-  const [showPasscode, setShowPasscode] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [confirmPhone, setConfirmPhone] = useState("");
@@ -113,24 +112,8 @@ export default function Program() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <Link
-        href="/"
-        aria-label="Back"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5"
-        >
-          <path d="m15 18-6-6 6-6" />
-          <path d="M20 12H9" />
-        </svg>
+      <Link href="/" className="text-sm text-muted">
+        Back
       </Link>
       <h1 className="mt-6 text-2xl font-bold">Set up a vendor card</h1>
 
@@ -138,47 +121,13 @@ export default function Program() {
         <form onSubmit={createVendor} className="mt-6 flex flex-col gap-4">
           <label className="block">
             <span className="font-bold">Staff passcode</span>
-            <div className="relative">
-              <input
-                type={showPasscode ? "text" : "password"}
-                className={`${inputClass} pr-12`}
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                autoComplete="off"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasscode((shown) => !shown)}
-                aria-label={showPasscode ? "Hide staff passcode" : "Show staff passcode"}
-                aria-pressed={showPasscode}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  {showPasscode ? (
-                    <>
-                      <path d="M3 3l18 18" />
-                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                      <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c5 0 8.3 4.5 9 7-.3 1.1-1 2.2-2 3.2" />
-                      <path d="M6.2 6.2C4.4 7.3 3.3 9 3 12c.5 2.4 3.8 7 9 7 1.3 0 2.4-.3 3.4-.8" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </>
-                  )}
-                </svg>
-              </button>
-            </div>
+            <input
+              type="password"
+              className={inputClass}
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              autoComplete="off"
+            />
           </label>
           <label className="block">
             <span className="font-bold">Vendor business name</span>

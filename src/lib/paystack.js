@@ -94,12 +94,6 @@ export async function verifyTransaction(reference) {
   return { ok: res.ok && json.status === true, message: json.message, data: json.data };
 }
 
-export async function getMobileMoneyStatus(reference) {
-  const result = await verifyTransaction(reference);
-  if (!result.ok) throw new Error(result.message || "Paystack could not verify this payment.");
-  return result.data || null;
-}
-
 // Status right after the charge is created.
 export function mapChargeStatus(status) {
   if (status === "success") return "success";

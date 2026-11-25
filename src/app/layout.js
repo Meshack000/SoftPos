@@ -1,5 +1,4 @@
 import { Atkinson_Hyperlegible } from "next/font/google";
-import type { ReactNode } from "react";
 import "./globals.css";
 
 const body = Atkinson_Hyperlegible({
@@ -13,7 +12,7 @@ export const metadata = {
   description: "Take mobile money payments with a tap.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en" className={body.variable}>
       <body className="min-h-screen">{children}</body>

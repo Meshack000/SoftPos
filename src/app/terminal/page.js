@@ -1,179 +1,257 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Keypad from "@/components/Keypad";
-import { nfcSupported, readCardId } from "@/lib/nfc";
-import { NETWORKS } from "@/lib/phone";
 
-const WAIT_LIMIT_MS = 190000; // Paystack gives the customer 180 seconds
+const STORE_KEY = "softpos_vendor";
+const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg";
 
 export default function Terminal() {
+  const [ready, setReady] = useState(false);
+  const [vendor, setVendor] = useState(null); // { slug, pin, name }
+  const [slugInput, setSlugInput] = useState("");
+  const [pinInput, setPinInput] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState("");
-  // entry | tapping | sending | pending | success | failed
-  const [status, setStatus] = useState("entry");
-  const [payment, setPayment] = useState(null);
-  const [message, setMessage] = useState("");
-  const [testId, setTestId] = useState("");
-  const controller = useRef(null);
+  const [sale, setSale] = useState(null);
+  const [notice, setNotice] = useState("");
 
   const numeric = parseFloat(amount) || 0;
-  const reference = payment?.reference;
+  const saleId = sale?.id;
+  const saleStatus = sale?.status;
 
-  function fail(text) {
-    setMessage(text);
-    setStatus("failed");
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORE_KEY);
+      if (saved) setVendor(JSON.parse(saved));
+    } catch {
+      // Ignore a broken saved session.
+    }
+    setReady(true);
+  }, []);
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "x-vendor-slug": vendor.slug,
+      "x-vendor-pin": vendor.pin,
+    };
   }
 
-  async function pay(cardId) {
-    setStatus("sending");
+  function signOut(message = "") {
     try {
-      const res = await fetch("/api/payments", {
+      sessionStorage.removeItem(STORE_KEY);
+    } catch {
+      // Ignore.
+    }
+    setVendor(null);
+    setSale(null);
+    setAmount("");
+    setPinInput("");
+    setLoginError(message);
+  }
+
+  async function login(event) {
+    event.preventDefault();
+    setLoginError("");
+    setBusy(true);
+    try {
+      const res = await fetch("/api/vendor/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId, amount: numeric }),
+        body: JSON.stringify({ slug: slugInput, pin: pinInput }),
       });
       const data = await res.json();
       if (!res.ok) {
-        fail(data.error || "The payment could not be started.");
+        setLoginError(data.error || "Could not sign in.");
         return;
       }
-      setPayment(data.payment);
-      setMessage(data.payment.message || "");
-      setStatus(data.payment.status);
-    } catch {
-      fail("Could not reach the server. Check your connection.");
-    }
-  }
-
-  async function startTap() {
-    if (!nfcSupported()) {
-      fail(
-        "NFC reading isn't available here. Use Chrome on an Android phone with NFC turned on."
-      );
-      return;
-    }
-
-    controller.current = new AbortController();
-    setStatus("tapping");
-
-    try {
-      const id = await readCardId(controller.current.signal);
-      await pay(id);
-    } catch (err) {
-      if (err.name === "AbortError") return;
-      fail(
-        err.name === "NotAllowedError"
-          ? "NFC permission was blocked. Allow it and try again."
-          : err.message
-      );
-    }
-  }
-
-  function cancelTap() {
-    controller.current?.abort();
-    setStatus("entry");
-  }
-
-  function newPayment() {
-    setAmount("");
-    setPayment(null);
-    setMessage("");
-    setStatus("entry");
-  }
-
-  // While the customer is entering their PIN, check on the payment every 3 seconds.
-  useEffect(() => {
-    if (status !== "pending" || !reference) return;
-
-    const started = Date.now();
-    const timer = setInterval(async () => {
-      if (Date.now() - started > WAIT_LIMIT_MS) {
-        clearInterval(timer);
-        fail("No approval received. The customer may not have entered their PIN in time.");
-        return;
-      }
+      const v = {
+        slug: slugInput.trim().toLowerCase(),
+        pin: pinInput.trim(),
+        name: data.name,
+      };
       try {
-        const res = await fetch(`/api/payments/${reference}`, { cache: "no-store" });
+        sessionStorage.setItem(STORE_KEY, JSON.stringify(v));
+      } catch {
+        // Ignore.
+      }
+      setVendor(v);
+    } catch {
+      setLoginError("Could not reach the server. Check your connection.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function requestPayment() {
+    setNotice("");
+    setBusy(true);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ amount: numeric }),
+      });
+      const data = await res.json();
+      if (res.status === 401) {
+        signOut("Your session ended. Sign in again.");
+        return;
+      }
+      if (!res.ok) {
+        setNotice(data.error || "Could not start the request.");
+        return;
+      }
+      setSale(data.request);
+    } catch {
+      setNotice("Could not reach the server. Check your connection.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function reset() {
+    setSale(null);
+    setAmount("");
+    setNotice("");
+  }
+
+  async function cancelRequest() {
+    if (!sale) return;
+    try {
+      const res = await fetch(`/api/requests/${sale.id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (res.status === 409) return; // A customer is already approving.
+    } catch {
+      // If we can't reach the server, still let the vendor move on.
+    }
+    reset();
+  }
+
+  // While a request is active, check on it every 3 seconds.
+  useEffect(() => {
+    if (!vendor || !saleId) return;
+    if (!["open", "pending", "failed"].includes(saleStatus)) return;
+
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/requests/${saleId}`, {
+          headers: { "x-vendor-slug": vendor.slug, "x-vendor-pin": vendor.pin },
+          cache: "no-store",
+        });
+        if (!res.ok) return;
         const data = await res.json();
-        if (!res.ok) {
-          clearInterval(timer);
-          fail(data.error || "Lost track of this payment.");
-          return;
-        }
-        if (data.payment.status !== "pending") {
-          clearInterval(timer);
-          setPayment(data.payment);
-          setMessage(data.payment.message || "");
-          setStatus(data.payment.status);
-        }
+        setSale(data.request);
       } catch {
         // Network blip. Try again on the next tick.
       }
     }, 3000);
 
     return () => clearInterval(timer);
-  }, [status, reference]);
+  }, [vendor, saleId, saleStatus]);
+
+  if (!ready) return null;
+
+  // Sign in
+  if (!vendor) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
+        <Link href="/" className="text-sm text-muted">
+          Back
+        </Link>
+        <h1 className="mt-6 text-2xl font-bold">Vendor sign in</h1>
+        <form onSubmit={login} className="mt-6 flex flex-col gap-4">
+          <label className="block">
+            <span className="font-bold">Vendor code</span>
+            <input
+              className={inputClass}
+              value={slugInput}
+              onChange={(e) => setSlugInput(e.target.value)}
+              placeholder="kumasi-mart-7f3a"
+              autoCapitalize="none"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block">
+            <span className="font-bold">PIN</span>
+            <input
+              type="password"
+              inputMode="numeric"
+              className={inputClass}
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value)}
+              autoComplete="off"
+            />
+          </label>
+          {loginError && <p className="text-danger">{loginError}</p>}
+          <button
+            type="submit"
+            disabled={busy || !slugInput || !pinInput}
+            className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
+          >
+            {busy ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+      </main>
+    );
+  }
+
+  const gone = sale && ["expired", "cancelled"].includes(sale.status);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <Link href="/" className="text-sm text-muted">
-        Back
-      </Link>
+      <div className="flex items-center justify-between">
+        <p className="font-bold">{vendor.name}</p>
+        <button type="button" onClick={() => signOut()} className="text-sm text-muted">
+          Sign out
+        </button>
+      </div>
 
       <div className="mt-6">
         <p className="text-sm text-muted">Amount to collect</p>
-        <p className="mt-1 text-5xl font-bold">GH&#8373; {amount || "0"}</p>
+        <p className="mt-1 text-5xl font-bold">
+          GH&#8373; {sale && !gone ? sale.amount.toFixed(2) : amount || "0"}
+        </p>
       </div>
 
-      {status === "entry" && (
+      {(!sale || gone) && (
         <div className="mt-8 flex flex-col gap-4">
+          {gone && (
+            <p className="rounded-ui border border-line p-4 text-muted">
+              {sale.status === "expired"
+                ? "That request expired. Enter the amount again."
+                : "Request cancelled."}
+            </p>
+          )}
           <Keypad value={amount} onChange={setAmount} />
+          {notice && <p className="text-danger">{notice}</p>}
           <button
             type="button"
-            onClick={startTap}
-            disabled={numeric <= 0}
+            onClick={requestPayment}
+            disabled={busy || numeric <= 0}
             className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
           >
-            Tap to pay
+            {busy ? "One moment..." : "Request payment"}
           </button>
-
-          {/* Testing only. We remove this once we test on a real phone. */}
-          <div className="rounded-ui border border-line p-4">
-            <p className="text-sm font-bold">Testing without a tag</p>
-            <p className="mt-1 text-sm text-muted">
-              Paste a card ID from the Set up a card page.
-            </p>
-            <input
-              className="mt-2 w-full rounded-ui border border-line px-3 py-2"
-              value={testId}
-              onChange={(e) => setTestId(e.target.value.trim())}
-              placeholder="Card ID"
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              disabled={numeric <= 0 || !testId}
-              onClick={() => pay(testId)}
-              className="mt-2 text-sm text-muted underline disabled:opacity-40"
-            >
-              Simulate a tap
-            </button>
-          </div>
         </div>
       )}
 
-      {status === "tapping" && (
+      {sale?.status === "open" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-line p-5">
-            <p className="text-lg font-bold">Waiting for the card</p>
+            <p className="text-lg font-bold">Waiting for the customer</p>
             <p className="mt-1 text-muted">
-              Hold the customer&rsquo;s card against the back of this phone.
+              Ask them to tap their phone on your card. They will see this amount and
+              approve with their MoMo PIN.
             </p>
           </div>
           <button
             type="button"
-            onClick={cancelTap}
+            onClick={cancelRequest}
             className="rounded-ui border border-line px-5 py-4 font-bold"
           >
             Cancel
@@ -181,37 +259,26 @@ export default function Terminal() {
         </div>
       )}
 
-      {status === "sending" && (
-        <div className="mt-8 rounded-ui border border-line p-5">
-          <p className="text-lg font-bold">Sending the request</p>
-          <p className="mt-1 text-muted">One moment.</p>
-        </div>
-      )}
-
-      {status === "pending" && payment && (
+      {sale?.status === "pending" && (
         <div className="mt-8 rounded-ui border border-gold p-5">
-          <p className="text-lg font-bold">
-            Waiting for {payment.name} to approve
-          </p>
+          <p className="text-lg font-bold">Customer is approving</p>
           <p className="mt-1">
-            A prompt was sent to their {NETWORKS[payment.network]?.label} phone.
-            Ask them to enter their MoMo PIN.
+            A prompt was sent to {sale.maskedPhone}. Waiting for their MoMo PIN.
           </p>
-          {message && <p className="mt-2 text-sm text-muted">{message}</p>}
         </div>
       )}
 
-      {status === "success" && payment && (
+      {sale?.status === "paid" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-brand p-5">
             <p className="text-lg font-bold text-brand">Paid</p>
             <p className="mt-1">
-              GH&#8373; {payment.amount.toFixed(2)} from {payment.name}
+              GH&#8373; {sale.amount.toFixed(2)} received from {sale.maskedPhone}
             </p>
           </div>
           <button
             type="button"
-            onClick={newPayment}
+            onClick={reset}
             className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark"
           >
             New payment
@@ -219,18 +286,21 @@ export default function Terminal() {
         </div>
       )}
 
-      {status === "failed" && (
+      {sale?.status === "failed" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-danger p-5">
             <p className="text-lg font-bold text-danger">Payment failed</p>
-            <p className="mt-1">{message || "The payment was not approved."}</p>
+            <p className="mt-1">{sale.message || "The payment was not approved."}</p>
+            <p className="mt-2 text-sm text-muted">
+              The customer can try again on their phone, or you can start a new request.
+            </p>
           </div>
           <button
             type="button"
-            onClick={() => setStatus("entry")}
+            onClick={reset}
             className="rounded-ui border border-line px-5 py-4 font-bold"
           >
-            Try again
+            New request
           </button>
         </div>
       )}
