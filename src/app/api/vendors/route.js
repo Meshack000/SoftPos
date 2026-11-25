@@ -46,12 +46,18 @@ export const POST = safe(async (request) => {
     return NextResponse.json({ error: "Choose the vendor's MoMo network." }, { status: 400 });
   }
 
-  const sub = await createSubaccount({ businessName: name, phone, network });
-  if (!sub.ok || !sub.code) {
-    return NextResponse.json(
-      { error: sub.message || "Paystack could not set up this vendor's payout account." },
-      { status: 502 }
-    );
+  // Early testing: if there is no real Paystack key yet, skip the payout account.
+  const key = process.env.PAYSTACK_SECRET_KEY || "";
+  const hasPaystack = key.startsWith("sk_");
+  let sub = { ok: true, code: "pending", accountName: "" };
+  if (hasPaystack) {
+    sub = await createSubaccount({ businessName: name, phone, network });
+    if (!sub.ok || !sub.code) {
+      return NextResponse.json(
+        { error: sub.message || "Paystack could not set up this vendor's payout account." },
+        { status: 502 }
+      );
+    }
   }
 
   const slug = makeSlug(name);
