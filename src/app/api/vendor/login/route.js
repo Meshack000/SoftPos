@@ -12,5 +12,5 @@ export const POST = safe(async (request) => {
   if (!vendor || !checkPin(pin, vendor.pinSalt, vendor.pinHash)) {
     return NextResponse.json({ error: "Wrong vendor code or PIN." }, { status: 401 });
   }
-  return NextResponse.json({ ok: true, name: vendor.name });
+  return NextResponse.json({ ok: true, name: vendor.name, plan: vendor.plan });
 });

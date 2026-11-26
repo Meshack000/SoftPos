@@ -74,6 +74,7 @@ export default function Terminal() {
         slug: slugInput.trim().toLowerCase(),
         pin: pinInput.trim(),
         name: data.name,
+        plan: data.plan,
       };
       try {
         sessionStorage.setItem(STORE_KEY, JSON.stringify(v));
@@ -202,11 +203,21 @@ export default function Terminal() {
   }
 
   const gone = sale && ["expired", "cancelled"].includes(sale.status);
+  const plan = vendor.plan || "free";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
       <div className="flex items-center justify-between">
-        <p className="font-bold">{vendor.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-bold">{vendor.name}</p>
+          <span
+            className={`rounded-ui border px-2 py-0.5 text-xs ${
+              plan === "premium" ? "border-brand text-brand" : "border-line text-muted"
+            }`}
+          >
+            {plan === "premium" ? "Premium" : "Free"}
+          </span>
+        </div>
         <button
           type="button"
           onClick={() => signOut()}
@@ -318,6 +329,14 @@ export default function Terminal() {
         </div>
         <div className="mt-3 rounded-ui border border-line p-5">
           <p className="text-muted">No transactions yet. Payments will show here.</p>
+          {plan === "free" && (
+            <p className="mt-2 text-sm text-muted">
+              Free plan shows your last 10 transactions.
+              <Link href="/premium" className="ml-1 text-brand underline">
+                See Premium
+              </Link>
+            </p>
+          )}
         </div>
       </section>
     </main>

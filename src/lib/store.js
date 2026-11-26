@@ -20,6 +20,7 @@ function toVendor(row) {
   return {
     slug: row.slug,
     name: row.name,
+    plan: row.plan || "free",
     pinSalt: row.pin_salt,
     pinHash: row.pin_hash,
     payoutPhone: row.payout_phone,
@@ -87,6 +88,21 @@ export async function getVendor(slug) {
     .from("vendors")
     .select("*")
     .eq("slug", slug)
+    .maybeSingle();
+  check(error);
+  return toVendor(data);
+}
+
+export async function setVendorPlan(slug, plan) {
+  if (plan !== "free" && plan !== "premium") {
+    throw new Error("Invalid vendor plan.");
+  }
+
+  const { data, error } = await db()
+    .from("vendors")
+    .update({ plan })
+    .eq("slug", slug)
+    .select()
     .maybeSingle();
   check(error);
   return toVendor(data);

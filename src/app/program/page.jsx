@@ -19,6 +19,9 @@ export default function Program() {
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState("idle"); // idle | writing | written | locking | locked
   const [error, setError] = useState("");
+  const [planMessage, setPlanMessage] = useState("");
+  const [planError, setPlanError] = useState(false);
+  const [planBusy, setPlanBusy] = useState(false);
   const controller = useRef(null);
 
   const isLocal = vendor && /localhost|127\.0\.0\.1/.test(vendor.url);
@@ -59,6 +62,32 @@ export default function Program() {
       setError("Could not reach the server. Check your connection.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function updatePlan(plan) {
+    setPlanMessage("");
+    setPlanBusy(true);
+    try {
+      const res = await fetch(`/api/vendors/${vendor.slug}/plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": passcode },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPlanError(true);
+        setPlanMessage(data.error || "Could not update the plan.");
+        return;
+      }
+      setPlanError(false);
+      setPlanMessage(`Plan set to ${data.plan}`);
+      setVendor((current) => (current ? { ...current, plan: data.plan } : current));
+    } catch {
+      setPlanError(true);
+      setPlanMessage("Could not reach the server. Check your connection.");
+    } finally {
+      setPlanBusy(false);
     }
   }
 
@@ -110,6 +139,8 @@ export default function Program() {
     setNetwork("");
     setStep("idle");
     setError("");
+    setPlanMessage("");
+    setPlanError(false);
   }
 
   return (
@@ -216,6 +247,33 @@ export default function Program() {
               <p className="mt-1 text-sm text-muted">
                 Paystack did not return an account name, so the number could not be
                 checked. Confirm it with the vendor.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-ui border border-line p-5">
+            <p className="font-bold">Plan</p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => updatePlan("free")}
+                disabled={planBusy}
+                className="rounded-ui border border-line px-4 py-2 font-bold disabled:text-muted"
+              >
+                Set Free
+              </button>
+              <button
+                type="button"
+                onClick={() => updatePlan("premium")}
+                disabled={planBusy}
+                className="rounded-ui border border-line px-4 py-2 font-bold disabled:text-muted"
+              >
+                Set Premium
+              </button>
+            </div>
+            {planMessage && (
+              <p className={`mt-2 text-sm ${planError ? "text-danger" : "text-muted"}`}>
+                {planMessage}
               </p>
             )}
           </div>
