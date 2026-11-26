@@ -1,5 +1,7 @@
 "use client";
 
+import { BackspaceIcon } from "@/components/Icons";
+
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"];
 
 export default function Keypad({ value, onChange }) {
@@ -30,9 +32,9 @@ export default function Keypad({ value, onChange }) {
           type="button"
           onClick={() => press(key)}
           aria-label={key === "back" ? "Delete last digit" : key}
-          className="rounded-ui border border-line py-4 text-2xl font-bold active:bg-soft"
+          className="grid place-items-center rounded-ui border border-line py-4 text-2xl font-bold active:bg-soft"
         >
-          {key === "back" ? "\u232B" : key}
+          {key === "back" ? <BackspaceIcon /> : key}
         </button>
       ))}
     </div>

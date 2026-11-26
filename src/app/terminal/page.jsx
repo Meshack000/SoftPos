@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Keypad from "@/components/Keypad";
+import PasswordInput from "@/components/PasswordInput";
+import { BackIcon, ClockIcon, LogoutIcon } from "@/components/Icons";
 
 const STORE_KEY = "softpos_vendor";
 const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg";
@@ -160,7 +162,8 @@ export default function Terminal() {
   if (!vendor) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-        <Link href="/" className="text-sm text-muted">
+        <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted">
+          <BackIcon />
           Back
         </Link>
         <h1 className="mt-6 text-2xl font-bold">Vendor sign in</h1>
@@ -178,10 +181,8 @@ export default function Terminal() {
           </label>
           <label className="block">
             <span className="font-bold">PIN</span>
-            <input
-              type="password"
+            <PasswordInput
               inputMode="numeric"
-              className={inputClass}
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value)}
               autoComplete="off"
@@ -206,7 +207,12 @@ export default function Terminal() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
       <div className="flex items-center justify-between">
         <p className="font-bold">{vendor.name}</p>
-        <button type="button" onClick={() => signOut()} className="text-sm text-muted">
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="inline-flex items-center gap-1 text-sm text-muted"
+        >
+          <LogoutIcon />
           Sign out
         </button>
       </div>
@@ -304,6 +310,16 @@ export default function Terminal() {
           </button>
         </div>
       )}
+
+      <section className="mt-8">
+        <div className="flex items-center gap-2">
+          <ClockIcon className="text-muted" />
+          <h2 className="font-bold">Recent transactions</h2>
+        </div>
+        <div className="mt-3 rounded-ui border border-line p-5">
+          <p className="text-muted">No transactions yet. Payments will show here.</p>
+        </div>
+      </section>
     </main>
   );
 }

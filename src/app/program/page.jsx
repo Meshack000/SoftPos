@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { nfcSupported, writeCardLink, lockCard } from "@/lib/nfc";
 import { NETWORKS, normalizePhone, detectNetwork } from "@/lib/phone";
+import PasswordInput from "@/components/PasswordInput";
+import { BackIcon } from "@/components/Icons";
 
 const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg";
 
@@ -112,7 +114,8 @@ export default function Program() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <Link href="/" className="text-sm text-muted">
+      <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted">
+        <BackIcon />
         Back
       </Link>
       <h1 className="mt-6 text-2xl font-bold">Set up a vendor card</h1>
@@ -121,9 +124,9 @@ export default function Program() {
         <form onSubmit={createVendor} className="mt-6 flex flex-col gap-4">
           <label className="block">
             <span className="font-bold">Staff passcode</span>
-            <input
-              type="password"
-              className={inputClass}
+            <PasswordInput
+              showLabel="Show passcode"
+              hideLabel="Hide passcode"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
               autoComplete="off"
