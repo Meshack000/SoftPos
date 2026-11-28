@@ -59,7 +59,7 @@ export default function Program() {
       });
       setStep("idle");
     } catch {
-      setError("Could not reach the server. Check your connection.");
+      setError("Could Not Reach Server. Check your connection.");
     } finally {
       setBusy(false);
     }
