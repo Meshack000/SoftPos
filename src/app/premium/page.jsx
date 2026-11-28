@@ -1,16 +1,10 @@
-import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
-import { BackIcon, CheckIcon } from "@/components/Icons";
+import { CheckIcon } from "@/components/Icons";
 
 export default function Premium() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-5 py-6">
-      <AppHeader>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted">
-          <BackIcon className="h-4 w-4" />
-          Back
-        </Link>
-      </AppHeader>
+      <AppHeader backHref="/" />
       <section className="mt-10">
         <p className="text-sm font-bold uppercase tracking-wide text-brand">Plans</p>
         <h1 className="mt-2 text-3xl font-bold">Premium</h1>

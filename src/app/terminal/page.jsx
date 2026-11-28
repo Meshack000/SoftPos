@@ -7,7 +7,6 @@ import PasswordInput from "@/components/PasswordInput";
 import AppHeader from "@/components/AppHeader";
 import {
   AlertCircleIcon,
-  BackIcon,
   CheckCircleIcon,
   ClockIcon,
   LogoutIcon,
@@ -170,12 +169,7 @@ export default function Terminal() {
   if (!vendor) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-        <AppHeader>
-          <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted">
-            <BackIcon className="h-4 w-4" />
-            Back
-          </Link>
-        </AppHeader>
+        <AppHeader backHref="/" />
         <section className="mt-10 rounded-ui border border-line p-5">
           <p className="text-sm font-bold uppercase tracking-wide text-brand">Vendor account</p>
           <h1 className="mt-2 text-2xl font-bold">Vendor sign in</h1>

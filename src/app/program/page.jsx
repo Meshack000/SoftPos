@@ -1,12 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { nfcSupported, writeCardLink, lockCard } from "@/lib/nfc";
 import { NETWORKS, normalizePhone, detectNetwork } from "@/lib/phone";
 import PasswordInput from "@/components/PasswordInput";
 import AppHeader from "@/components/AppHeader";
-import { AlertCircleIcon, BackIcon, CheckIcon } from "@/components/Icons";
+import { AlertCircleIcon, CheckIcon } from "@/components/Icons";
 
 const inputClass = "mt-1 w-full rounded-ui border border-line bg-white px-4 py-3 text-lg";
 
@@ -146,12 +145,7 @@ export default function Program() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <AppHeader>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted">
-          <BackIcon className="h-4 w-4" />
-          Back
-        </Link>
-      </AppHeader>
+      <AppHeader backHref="/" />
       <section className="mt-10">
         <p className="text-sm font-bold uppercase tracking-wide text-brand">Staff setup</p>
         <h1 className="mt-2 text-3xl font-bold">Set up a vendor card</h1>
