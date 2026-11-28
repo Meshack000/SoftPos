@@ -32,7 +32,7 @@ export default function Keypad({ value, onChange }) {
           type="button"
           onClick={() => press(key)}
           aria-label={key === "back" ? "Delete last digit" : key}
-          className="grid place-items-center rounded-ui border border-line py-4 text-2xl font-bold active:bg-soft"
+          className="grid h-14 place-items-center rounded-ui border border-line bg-white text-2xl font-bold hover:bg-soft active:bg-soft"
         >
           {key === "back" ? <BackspaceIcon /> : key}
         </button>

@@ -5,9 +5,10 @@ import Link from "next/link";
 import { nfcSupported, writeCardLink, lockCard } from "@/lib/nfc";
 import { NETWORKS, normalizePhone, detectNetwork } from "@/lib/phone";
 import PasswordInput from "@/components/PasswordInput";
-import { BackIcon } from "@/components/Icons";
+import AppHeader from "@/components/AppHeader";
+import { AlertCircleIcon, BackIcon, CheckIcon } from "@/components/Icons";
 
-const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg";
+const inputClass = "mt-1 w-full rounded-ui border border-line bg-white px-4 py-3 text-lg";
 
 export default function Program() {
   const [passcode, setPasscode] = useState("");
@@ -145,14 +146,26 @@ export default function Program() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted">
-        <BackIcon />
-        Back
-      </Link>
-      <h1 className="mt-6 text-2xl font-bold">Set up a vendor card</h1>
+      <AppHeader>
+        <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted">
+          <BackIcon className="h-4 w-4" />
+          Back
+        </Link>
+      </AppHeader>
+      <section className="mt-10">
+        <p className="text-sm font-bold uppercase tracking-wide text-brand">Staff setup</p>
+        <h1 className="mt-2 text-3xl font-bold">Set up a vendor card</h1>
+        <p className="mt-2 leading-relaxed text-muted">
+          Create a vendor profile and write its payment link to an NFC card.
+        </p>
+      </section>
 
       {!vendor && (
-        <form onSubmit={createVendor} className="mt-6 flex flex-col gap-4">
+        <form
+          onSubmit={createVendor}
+          className="mt-6 flex flex-col gap-4 rounded-ui border border-line p-5"
+        >
+          <p className="text-lg font-bold">Vendor details</p>
           <label className="block">
             <span className="font-bold">Staff passcode</span>
             <PasswordInput
@@ -194,26 +207,44 @@ export default function Program() {
               autoComplete="off"
             />
           </label>
-          <label className="block">
-            <span className="font-bold">Network</span>
-            <select
-              className={inputClass}
-              value={network}
-              onChange={(e) => setNetwork(e.target.value)}
-            >
-              <option value="">Choose a network</option>
-              {Object.entries(NETWORKS).map(([key, n]) => (
-                <option key={key} value={key}>
-                  {n.label}
-                </option>
+          <fieldset>
+            <legend className="font-bold">Network</legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {Object.entries(NETWORKS).map(([key]) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={network === key}
+                  onClick={() => setNetwork(key)}
+                  className={`relative flex min-h-14 items-center justify-center gap-2 rounded-ui px-2 py-3 text-sm font-bold ${
+                    network === key ? "border-2 border-brand" : "border border-line"
+                  }`}
+                >
+                  {network === key && (
+                    <CheckIcon className="absolute right-1 top-1 h-4 w-4 text-brand" />
+                  )}
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor:
+                        key === "mtn" ? "#FFCC00" : key === "vod" ? "#E60000" : "#0057B8",
+                    }}
+                  />
+                  {key === "mtn" ? "MTN" : key === "vod" ? "Telecel" : "AirtelTigo"}
+                </button>
               ))}
-            </select>
-          </label>
-          {error && <p className="text-danger">{error}</p>}
+            </div>
+          </fieldset>
+          {error && (
+            <p className="flex items-start gap-2 text-danger">
+              <AlertCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={busy || !passcode || !name.trim() || !phone || !confirmPhone || !network}
-            className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
+            className="h-14 rounded-ui bg-brand px-5 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
           >
             {busy ? "Creating..." : "Create vendor"}
           </button>
@@ -222,11 +253,12 @@ export default function Program() {
 
       {vendor && (
         <div className="mt-6 flex flex-col gap-4">
-          <div className="rounded-ui border border-gold p-5">
-            <p className="font-bold">Give these to {vendor.name}</p>
-            <p className="mt-3 text-sm text-muted">Vendor code</p>
+          <div className="rounded-ui border border-gold bg-soft p-5">
+            <p className="text-sm font-bold uppercase tracking-wide text-gold">Vendor created</p>
+            <p className="mt-2 text-xl font-bold">Give these to {vendor.name}</p>
+            <p className="mt-4 text-sm font-bold text-muted">Vendor code</p>
             <p className="break-all text-lg font-bold">{vendor.slug}</p>
-            <p className="mt-3 text-sm text-muted">Vendor PIN</p>
+            <p className="mt-4 text-sm font-bold text-muted">Vendor PIN</p>
             <p className="text-3xl font-bold tracking-widest">{vendor.pin}</p>
             <p className="mt-3 text-sm">
               The PIN is shown only once. Copy it now. It can&rsquo;t be viewed again.
@@ -234,7 +266,7 @@ export default function Program() {
           </div>
 
           <div className="rounded-ui border border-line p-5">
-            <p className="font-bold">Payout account</p>
+            <p className="text-lg font-bold">Payout account</p>
             {vendor.payoutName ? (
               <>
                 <p className="mt-1 text-lg">{vendor.payoutName}</p>
@@ -252,13 +284,13 @@ export default function Program() {
           </div>
 
           <div className="rounded-ui border border-line p-5">
-            <p className="font-bold">Plan</p>
+            <p className="text-lg font-bold">Plan</p>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 onClick={() => updatePlan("free")}
                 disabled={planBusy}
-                className="rounded-ui border border-line px-4 py-2 font-bold disabled:text-muted"
+                className="h-10 rounded-ui border border-line px-4 font-bold hover:bg-soft disabled:text-muted"
               >
                 Set Free
               </button>
@@ -266,7 +298,7 @@ export default function Program() {
                 type="button"
                 onClick={() => updatePlan("premium")}
                 disabled={planBusy}
-                className="rounded-ui border border-line px-4 py-2 font-bold disabled:text-muted"
+                className="h-10 rounded-ui border border-line px-4 font-bold hover:bg-soft disabled:text-muted"
               >
                 Set Premium
               </button>
@@ -279,7 +311,7 @@ export default function Program() {
           </div>
 
           <div className="rounded-ui border border-line p-5">
-            <p className="font-bold">Link for the card</p>
+            <p className="text-lg font-bold">Link for the card</p>
             <p className="mt-1 break-all text-muted">{vendor.url}</p>
           </div>
 
@@ -294,7 +326,7 @@ export default function Program() {
             <button
               type="button"
               onClick={write}
-              className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark"
+              className="h-14 rounded-ui bg-brand px-5 text-lg font-bold text-white hover:bg-brand-dark"
             >
               Write to a card
             </button>
@@ -302,13 +334,13 @@ export default function Program() {
 
           {(step === "writing" || step === "locking") && (
             <div className="flex flex-col gap-2">
-              <p className="rounded-ui border border-line p-4">
+              <p className="rounded-ui border border-line bg-soft p-4">
                 Hold the card against the back of this phone.
               </p>
               <button
                 type="button"
                 onClick={cancel}
-                className="rounded-ui border border-line px-5 py-4 font-bold"
+                className="h-12 rounded-ui border border-line px-5 font-bold hover:bg-soft"
               >
                 Cancel
               </button>
@@ -317,13 +349,14 @@ export default function Program() {
 
           {step === "written" && (
             <div className="flex flex-col gap-3">
-              <p className="rounded-ui border border-brand p-4 font-bold text-brand">
+              <p className="flex items-center gap-2 rounded-ui border border-brand bg-soft p-4 font-bold text-brand">
+                <CheckIcon className="h-5 w-5 shrink-0" />
                 Link written to the card.
               </p>
               <button
                 type="button"
                 onClick={lock}
-                className="rounded-ui border border-line px-5 py-4 font-bold"
+                className="h-14 rounded-ui border border-line px-5 font-bold hover:bg-soft"
               >
                 Lock the card (cannot be undone)
               </button>
@@ -335,17 +368,23 @@ export default function Program() {
           )}
 
           {step === "locked" && (
-            <p className="rounded-ui border border-brand p-4 font-bold text-brand">
+            <p className="flex items-center gap-2 rounded-ui border border-brand bg-soft p-4 font-bold text-brand">
+              <CheckIcon className="h-5 w-5 shrink-0" />
               Card locked. It can no longer be changed.
             </p>
           )}
 
-          {error && <p className="text-danger">{error}</p>}
+          {error && (
+            <p className="flex items-start gap-2 text-danger">
+              <AlertCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+              {error}
+            </p>
+          )}
 
           <button
             type="button"
             onClick={another}
-            className="rounded-ui border border-line px-5 py-4 font-bold"
+            className="h-14 rounded-ui border border-line px-5 font-bold hover:bg-soft"
           >
             Set up another vendor
           </button>

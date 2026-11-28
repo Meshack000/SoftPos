@@ -16,13 +16,13 @@ export default function PasswordInput({
       <input
         {...inputProps}
         type={visible ? "text" : "password"}
-        className={`mt-1 w-full rounded-ui border border-line px-4 py-3 pr-12 text-lg ${className}`}
+        className={`mt-1 w-full rounded-ui border border-line bg-white px-4 py-3 pr-12 text-lg ${className}`}
       />
       <button
         type="button"
         aria-label={visible ? hideLabel : showLabel}
         onClick={() => setVisible((current) => !current)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+        className="absolute right-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-ui text-muted hover:bg-soft"
       >
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </button>
