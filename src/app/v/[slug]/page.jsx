@@ -156,9 +156,12 @@ export default function BuyerPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <header className="mb-8 flex items-center justify-between">
-        <span className="text-sm font-bold">SoftPOS</span>
-        <span className="flex items-center gap-1.5 text-sm text-muted">
+      <header className="mb-8 flex items-center justify-between border-b border-line pb-4">
+        <span className="flex items-center gap-2 text-sm font-bold">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-soft text-brand">S</span>
+          SoftPOS
+        </span>
+        <span className="flex items-center gap-1.5 text-xs font-bold text-muted">
           <LockIcon className="h-4 w-4" />
           Mobile money payment
         </span>
@@ -167,16 +170,20 @@ export default function BuyerPage() {
       {view === "loading" && <p className="text-muted">Loading...</p>}
 
       {view === "missing" && (
-        <div className="rounded-ui border border-danger p-5">
-          <AlertCircleIcon className="mb-3 h-6 w-6 text-danger" />
-          <p className="text-lg font-bold text-danger">{message}</p>
-          <p className="mt-1">Check that you tapped the right card.</p>
+        <div className="mt-8 flex flex-col items-center rounded-ui border border-danger p-6 text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-full bg-soft text-danger">
+            <AlertCircleIcon className="h-7 w-7" />
+          </div>
+          <p className="mt-4 text-xl font-bold text-danger">{message}</p>
+          <p className="mt-2 leading-relaxed text-muted">
+            Check that you tapped the right card.
+          </p>
         </div>
       )}
 
       {view === "ready" && (
         <>
-          <p className="text-sm text-muted">Pay</p>
+          <p className="text-sm font-bold uppercase tracking-wide text-brand">Pay</p>
           <div className="mt-2 flex items-center gap-3">
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand text-xl font-bold text-white">
               {vendorName.charAt(0).toUpperCase()}
@@ -201,8 +208,8 @@ export default function BuyerPage() {
 
           {sale && (
             <form onSubmit={pay} className="mt-6 flex flex-col gap-5">
-              <div className="rounded-ui bg-soft p-5">
-                <p className="text-sm text-muted">Amount to pay</p>
+              <div className="rounded-ui border border-line bg-soft p-5">
+                <p className="text-sm font-bold text-muted">Amount to pay</p>
                 <p className="mt-1 text-5xl font-bold">
                   <span className="mr-2 text-2xl font-normal text-muted">GH&#8373;</span>
                   {sale.amount.toFixed(2)}
