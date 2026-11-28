@@ -265,7 +265,8 @@ export default function Terminal() {
       {(!sale || gone) && (
         <div className="mt-8 flex flex-col gap-4">
           {gone && (
-            <p className="rounded-ui border border-line p-4 text-muted">
+            <p className="flex items-start gap-2 rounded-ui border border-line p-4 text-muted">
+              <AlertCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
               {sale.status === "expired"
                 ? "That request expired. Enter the amount again."
                 : "Request cancelled."}
@@ -277,7 +278,7 @@ export default function Terminal() {
             type="button"
             onClick={requestPayment}
             disabled={busy || numeric <= 0}
-            className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
+            className="h-14 rounded-ui bg-brand px-5 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
           >
             {busy ? "One moment..." : "Request payment"}
           </button>
@@ -287,7 +288,12 @@ export default function Terminal() {
       {sale?.status === "open" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-line p-5">
-            <p className="text-lg font-bold">Waiting for the customer</p>
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft text-brand">
+                <ClockIcon className="h-5 w-5" />
+              </span>
+              <p className="text-lg font-bold">Waiting for the customer</p>
+            </div>
             <p className="mt-1 text-muted">
               Ask them to tap their phone on your card. They will see this amount and
               approve with their MoMo PIN.
@@ -296,7 +302,7 @@ export default function Terminal() {
           <button
             type="button"
             onClick={cancelRequest}
-            className="rounded-ui border border-line px-5 py-4 font-bold"
+            className="h-14 rounded-ui border border-line px-5 font-bold hover:bg-soft"
           >
             Cancel
           </button>
@@ -305,7 +311,12 @@ export default function Terminal() {
 
       {sale?.status === "pending" && (
         <div className="mt-8 rounded-ui border border-gold p-5">
-          <p className="text-lg font-bold">Customer is approving</p>
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft text-gold">
+              <ClockIcon className="h-5 w-5" />
+            </span>
+            <p className="text-lg font-bold">Customer is approving</p>
+          </div>
           <p className="mt-1">
             A prompt was sent to {sale.maskedPhone}. Waiting for their MoMo PIN.
           </p>
@@ -315,15 +326,20 @@ export default function Terminal() {
       {sale?.status === "paid" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-brand p-5">
-            <p className="text-lg font-bold text-brand">Paid</p>
-            <p className="mt-1">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft text-brand">
+                <CheckCircleIcon className="h-5 w-5" />
+              </span>
+              <p className="text-lg font-bold text-brand">Paid</p>
+            </div>
+            <p className="mt-3">
               GH&#8373; {sale.amount.toFixed(2)} received from {sale.maskedPhone}
             </p>
           </div>
           <button
             type="button"
             onClick={reset}
-            className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark"
+            className="h-14 rounded-ui bg-brand px-5 text-lg font-bold text-white hover:bg-brand-dark"
           >
             New payment
           </button>
@@ -333,8 +349,11 @@ export default function Terminal() {
       {sale?.status === "failed" && (
         <div className="mt-8 flex flex-col gap-4">
           <div className="rounded-ui border border-danger p-5">
-            <p className="text-lg font-bold text-danger">Payment failed</p>
-            <p className="mt-1">{sale.message || "The payment was not approved."}</p>
+            <div className="flex items-center gap-3">
+              <AlertCircleIcon className="h-6 w-6 shrink-0 text-danger" />
+              <p className="text-lg font-bold text-danger">Payment failed</p>
+            </div>
+            <p className="mt-3">{sale.message || "The payment was not approved."}</p>
             <p className="mt-2 text-sm text-muted">
               The customer can try again on their phone, or you can start a new request.
             </p>
@@ -342,7 +361,7 @@ export default function Terminal() {
           <button
             type="button"
             onClick={reset}
-            className="rounded-ui border border-line px-5 py-4 font-bold"
+            className="h-14 rounded-ui border border-line px-5 font-bold hover:bg-soft"
           >
             New request
           </button>
@@ -350,12 +369,19 @@ export default function Terminal() {
       )}
 
       <section className="mt-8">
-        <div className="flex items-center gap-2">
-          <ClockIcon className="text-muted" />
-          <h2 className="font-bold">Recent transactions</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">Recent transactions</h2>
+          <ClockIcon className="h-5 w-5 text-muted" />
         </div>
         <div className="mt-3 rounded-ui border border-line p-5">
-          <p className="text-muted">No transactions yet. Payments will show here.</p>
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft text-muted">
+              <ClockIcon className="h-5 w-5" />
+            </span>
+            <p className="text-sm leading-relaxed text-muted">
+              No transactions yet. Payments will show here.
+            </p>
+          </div>
           {plan === "free" && (
             <p className="mt-2 text-sm text-muted">
               Free plan shows your last 10 transactions.
