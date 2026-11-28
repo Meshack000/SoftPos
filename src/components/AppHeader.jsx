@@ -7,10 +7,7 @@ export default function AppHeader({ children }) {
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft text-lg font-bold text-brand">
           S
         </span>
-        <span className="leading-tight">
-          <span className="block font-bold">SoftPOS</span>
-          <span className="mt-1 block text-xs text-muted">Mobile money payments</span>
-        </span>
+        <span className="font-bold">SoftPOS</span>
       </Link>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </header>
