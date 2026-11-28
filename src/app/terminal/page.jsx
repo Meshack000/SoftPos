@@ -4,10 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Keypad from "@/components/Keypad";
 import PasswordInput from "@/components/PasswordInput";
-import { BackIcon, ClockIcon, LogoutIcon } from "@/components/Icons";
+import AppHeader from "@/components/AppHeader";
+import {
+  AlertCircleIcon,
+  BackIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  LogoutIcon,
+} from "@/components/Icons";
 
 const STORE_KEY = "softpos_vendor";
-const inputClass = "mt-1 w-full rounded-ui border border-line px-4 py-3 text-lg";
+const inputClass = "mt-1 w-full rounded-ui border border-line bg-white px-4 py-3 text-lg";
 
 export default function Terminal() {
   const [ready, setReady] = useState(false);
@@ -163,41 +170,54 @@ export default function Terminal() {
   if (!vendor) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted">
-          <BackIcon />
-          Back
-        </Link>
-        <h1 className="mt-6 text-2xl font-bold">Vendor sign in</h1>
-        <form onSubmit={login} className="mt-6 flex flex-col gap-4">
-          <label className="block">
-            <span className="font-bold">Vendor code</span>
-            <input
-              className={inputClass}
-              value={slugInput}
-              onChange={(e) => setSlugInput(e.target.value)}
-              placeholder="kumasi-mart-7f3a"
-              autoCapitalize="none"
-              autoComplete="off"
-            />
-          </label>
-          <label className="block">
-            <span className="font-bold">PIN</span>
-            <PasswordInput
-              inputMode="numeric"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              autoComplete="off"
-            />
-          </label>
-          {loginError && <p className="text-danger">{loginError}</p>}
-          <button
-            type="submit"
-            disabled={busy || !slugInput || !pinInput}
-            className="rounded-ui bg-brand px-5 py-4 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
-          >
-            {busy ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+        <AppHeader>
+          <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted">
+            <BackIcon className="h-4 w-4" />
+            Back
+          </Link>
+        </AppHeader>
+        <section className="mt-10 rounded-ui border border-line p-5">
+          <p className="text-sm font-bold uppercase tracking-wide text-brand">Vendor account</p>
+          <h1 className="mt-2 text-2xl font-bold">Vendor sign in</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Sign in to open your payment terminal.
+          </p>
+          <form onSubmit={login} className="mt-6 flex flex-col gap-4">
+            <label className="block">
+              <span className="font-bold">Vendor code</span>
+              <input
+                className={inputClass}
+                value={slugInput}
+                onChange={(e) => setSlugInput(e.target.value)}
+                placeholder="kumasi-mart-7f3a"
+                autoCapitalize="none"
+                autoComplete="off"
+              />
+            </label>
+            <label className="block">
+              <span className="font-bold">PIN</span>
+              <PasswordInput
+                inputMode="numeric"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+            {loginError && (
+              <p className="flex items-start gap-2 text-danger">
+                <AlertCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+                {loginError}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={busy || !slugInput || !pinInput}
+              className="h-14 rounded-ui bg-brand px-5 text-lg font-bold text-white hover:bg-brand-dark disabled:bg-line disabled:text-muted"
+            >
+              {busy ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+        </section>
       </main>
     );
   }
@@ -207,31 +227,38 @@ export default function Terminal() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="font-bold">{vendor.name}</p>
-          <span
-            className={`rounded-ui border px-2 py-0.5 text-xs ${
-              plan === "premium" ? "border-brand text-brand" : "border-line text-muted"
-            }`}
-          >
-            {plan === "premium" ? "Premium" : "Free"}
-          </span>
-        </div>
+      <AppHeader>
         <button
           type="button"
           onClick={() => signOut()}
-          className="inline-flex items-center gap-1 text-sm text-muted"
+          className="inline-flex items-center gap-1 rounded-ui border border-line px-3 py-2 text-sm font-bold text-muted hover:bg-soft"
         >
-          <LogoutIcon />
+          <LogoutIcon className="h-4 w-4" />
           Sign out
         </button>
+      </AppHeader>
+
+      <div className="mt-6 flex items-center gap-3">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-soft text-lg font-bold text-brand">
+          {vendor.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-lg font-bold">{vendor.name}</p>
+          <span
+            className={`mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+              plan === "premium" ? "border-brand text-brand" : "border-line text-muted"
+            }`}
+          >
+            {plan === "premium" ? "Premium" : "Free"} plan
+          </span>
+        </div>
       </div>
 
-      <div className="mt-6">
-        <p className="text-sm text-muted">Amount to collect</p>
-        <p className="mt-1 text-5xl font-bold">
-          GH&#8373; {sale && !gone ? sale.amount.toFixed(2) : amount || "0"}
+      <div className="mt-6 rounded-ui bg-soft p-5">
+        <p className="text-sm font-bold text-muted">Amount to collect</p>
+        <p className="mt-2 text-5xl font-bold">
+          <span className="mr-2 text-2xl font-normal text-muted">GH&#8373;</span>
+          {sale && !gone ? sale.amount.toFixed(2) : amount || "0"}
         </p>
       </div>
 
